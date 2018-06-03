@@ -108,10 +108,23 @@ CrossTable(x=data_test_labels, y=data_test_pred, prop.chisq = FALSE)
 
 # Investigue los resultados en el meta parametro $K$ numero de cumulos e investigue posibles procesos de seleccion del mismo.
 
-# Elabore un resumen, y selecione un mejor valor segun el/los criterios aplicados, discuta el significado de los cumulos
-encontrados. 
+# Elabore un resumen, y selecione un mejor valor segun el/los criterios aplicados, discuta el significado de los cumulos encontrados. 
 
 # Comente la influencia de la normalizacion de los datos en los resultados del clustering.
+#Attribute Information:
+
+#1. Sample code number: id number 
+#2. Clump Thickness: 1 - 10 
+#3. Uniformity of Cell Size: 1 - 10 
+#4. Uniformity of Cell Shape: 1 - 10 
+#5. Marginal Adhesion: 1 - 10 
+#6. Single Epithelial Cell Size: 1 - 10 
+#7. Bare Nuclei: 1 - 10 
+#8. Bland Chromatin: 1 - 10 
+#9. Normal Nucleoli: 1 - 10 
+#10. Mitoses: 1 - 10 
+#11. Class: (2 for benign, 4 for malignant)
+
 
 data_cancer <- read.csv("https://archive.ics.uci.edu/ml/machine-learning-databases/breast-cancer-wisconsin/breast-cancer-wisconsin.data",header=FALSE)
 
