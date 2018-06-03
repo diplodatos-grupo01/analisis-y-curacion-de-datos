@@ -1,0 +1,53 @@
+---
+title: "Trabajo practico 1"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+library(nycflights13)
+fligths<-nycflights13::flights
+```
+
+## Entregar un Rmd donde se encuentren todos los vuelos que:
+* Que arribaron con un retraso de mas de dos horas.
+* Volaron hacia Houston (IAH o HOU).
+* Fueron operados por United, American o Delta.
+* Salieron en Verano (Julio, Agosto y Septiembre)
+* Arrivaron mas de dos horas tarde, pero salieron bien.
+* Salieron entre medianoche y las 6 am.
+
+```{r cars}
+summary(fligths)
+```
+
+### Vuelos que arribaron con un retraso de mas de dos horas.
+```{r}
+delayed<-subset(flights, arr_delay>120)
+delayed
+```
+### Vuelos con destino a Houston (IAH o HOU).
+```{r}
+flights_to_houston<-subset(flights, dest %in% c('IAH','HOU'))
+flights_to_houston
+```
+### Vuelos que fueron operados por United, American o Delta.
+```{r}
+companies_to_request<-subset(airlines, name %in% c('United Air Lines Inc.', 'American Airlines Inc.', 'Delta Air Lines Inc.'))
+flights_requested_company<-subset(flights, carrier %in% companies_to_request$carrier)
+flights_requested_company
+```
+### Vuelos que salieron en Verano (Julio, Agosto y Septiembre)
+```{r}
+flights_requested_month<-subset(flights, month %in% c(7, 8, 9))
+flights_requested_month
+```
+### Vuelos que arrivaron mas de dos horas tarde, pero salieron bien.
+```{r}
+delayed_departure<-subset(delayed, dep_delay <= 0)
+delayed_departure
+```
+### Vuelos que salieron entre medianoche y las 6 am.
+```{r}
+departure_between<-subset(flights, dep_time<=600 | dep_time==2400)
+departure_between
+```
