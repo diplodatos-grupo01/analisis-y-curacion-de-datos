@@ -3,7 +3,7 @@ title: "Trabajo practico 2"
 output: pdf_document
 ---
 
-## Los valores correctos estan en la diagonal de la matriz, 98% de precision para unas pocas lineas de R!
+## Tareas sobre el dataset Breast Cancer Winsconsin.
 
 ```{r echo=TRUE}
 library(class)
@@ -63,7 +63,7 @@ data_test_pred_z <- knn(train=data_train_z, test=data_test_z, cl=data_train_labe
 CrossTable(x=data_test_labels_z, y=data_test_pred_z, prop.chisq = FALSE)
 ```
 
-+ mientras termina su merecido cafe verifique si el resultado cambia utilizando paciente elegidos aleatoriamente para el conjunto de validacion.
++ mientras termina su merecido cafe verifique si el resultado cambia utilizando pacientes elegidos aleatoriamente para el conjunto de validacion.
 
 ```{r}
 normalize_cols <- function(dataf, method='mm', cols=NULL) {
@@ -87,45 +87,94 @@ split_train_test <- function(data, percentage=.80, seed=1) {
   return (list('train'=train, 'test'=test, 'sample_idx'=sample))
 }
 
-new_data<-normalize_cols(data, method="zs", cols=2:31)
+new_data <- normalize_cols(data, method="zs", cols=2:31)
 new_data <- split_train_test(new_data, percentage=.80)
-data_train<-new_data$train[,2:31]
-data_test<-new_data$test[,2:31]
-data_train_labels<-new_data$train[,1]
-data_test_labels<-new_data$test[,1]
-data_n <- as.data.frame(lapply(data[2:31], normalize))
+data_train <- new_data$train[,2:31]
+data_test <- new_data$test[,2:31]
+data_train_labels <- new_data$train[,1]
+data_test_labels <- new_data$test[,1]
+# data_n <- as.data.frame(lapply(data[2:31], normalize))
 
 data_test_pred <- knn(train=data_train, test=data_test, cl=data_train_labels, k=21)
 CrossTable(x=data_test_labels, y=data_test_pred, prop.chisq = FALSE)
 
 ```
 
+# Practico 2
+
+En este trabajo se hizo un procesamiento sobre uno de los datasets de [kaggle](https://www.kaggle.com/). Se eligió un dataset sobre consumo de alcohol de estudiantes. El dataset está disponible en [este link](https://www.kaggle.com/uciml/student-alcohol-consumption/data).
+
+Dados estos datos se trató de predecir el consumo de alcohol dadas las variables disponibles en el dataset. Se trató solamente las variables numéricas del dataset con el algoritmo K Nearest Neighbours (KNN).
+```{r}
+data_alc <- read.table("../input/student-mat.csv",sep=",",header=TRUE)
+```
+
+Deshechamos variables no numéricas y cambiamos las etiquetas de la variables que nos interesa procesar, empleando nombres más significativos.
 
 ```{r}
-## Practico 2: Entregar un Rmd donde se:
-
-# Elija un dataset clasificado de su preferencia y area (domain expertise), aplique un metodo de clustering y/o mixtura de Gaussianas en el mismo.
-
-# Investigue los resultados en el meta parametro $K$ numero de cumulos e investigue posibles procesos de seleccion del mismo.
-
-# Elabore un resumen, y selecione un mejor valor segun el/los criterios aplicados, discuta el significado de los cumulos encontrados. 
-
-# Comente la influencia de la normalizacion de los datos en los resultados del clustering.
-#Attribute Information:
-
-#1. Sample code number: id number 
-#2. Clump Thickness: 1 - 10 
-#3. Uniformity of Cell Size: 1 - 10 
-#4. Uniformity of Cell Shape: 1 - 10 
-#5. Marginal Adhesion: 1 - 10 
-#6. Single Epithelial Cell Size: 1 - 10 
-#7. Bare Nuclei: 1 - 10 
-#8. Bland Chromatin: 1 - 10 
-#9. Normal Nucleoli: 1 - 10 
-#10. Mitoses: 1 - 10 
-#11. Class: (2 for benign, 4 for malignant)
-
-
-data_cancer <- read.csv("https://archive.ics.uci.edu/ml/machine-learning-databases/breast-cancer-wisconsin/breast-cancer-wisconsin.data",header=FALSE)
-
+# get numeric columns to work with
+num_cols <- unlist(lapply(data_alc, is.numeric))
+data_alc <- data_alc[, num_cols] # forget other variables
+# anotate correctly our labels
+data_alc$Walc <- gsub(1, 'Very-Low', data_alc$Walc)
+data_alc$Walc <- gsub(2, 'Med-Low', data_alc$Walc)
+data_alc$Walc <- gsub(3, 'Med', data_alc$Walc)
+data_alc$Walc <- gsub(4, 'Med-High', data_alc$Walc)
+data_alc$Walc <- gsub(5, 'Very-High', data_alc$Walc)
 ```
+
+A continuación se probaran diferentes valores del parámetro K, discriminando por la forma de normalizar el dataset.
+
+### Procesamiento con Normalización Min-Max
+
+```{r}
+cols_to_norm <- setdiff(1:16, 11) # columns to normalize
+
+# Min max normalization
+new_data <- normalize_cols(data_alc, method="mm", cols=cols_to_norm)
+splits_tt <- split_train_test(new_data, percentage=.80, seed=1)
+data_train <- splits_tt$train[,cols_to_norm]
+data_test <- splits_tt$test[,cols_to_norm]
+data_train_labels <- splits_tt$train[,11]
+data_test_labels <- splits_tt$test[,11]
+
+
+accuracy_for_k <- function(k) {
+  data_test_pred <- knn(train=data_train, test=data_test, cl=data_train_labels, k=k)
+  # res = CrossTable(x=data_test_labels, y=data_test_pred, prop.chisq = FALSE)
+  # accuracy calculation
+  accuracy = sum(data_test_pred == data_test_labels) / length(data_test_labels)
+  return(accuracy)
+}
+
+acs_mm <- invisible(lapply(1:80, accuracy_for_k))
+plot(1:length(acs_mm), acs_mm, type='o', xlab='Valores de K', ylab='Porcentaje de predicciones correctas', main='Aciertos sobre K con KNN (min-max)')
+highest_k_mm <- which.max(acs_mm)
+highest_acc_mm <- acs_mm[highest_k_mm]
+```
+
+Se puede ver que la presición para la predicción no es muy buena. Lo aciertos varian en porcentajes bajos para diferentes valores de K. Con K = 33 se da uno de los valores mas altos de accuracy (38%). Veamos qué sucede ahora si normalizamos con otra metodología.
+
+###  Procesamiento con Normalización Z-score
+
+
+```{r}
+# Z-score normalization
+new_data <- normalize_cols(data_alc, method="zs", cols=cols_to_norm)
+splits_tt <- split_train_test(new_data, percentage=.80, seed=1)
+data_train <- splits_tt$train[,cols_to_norm]
+data_test <- splits_tt$test[,cols_to_norm]
+data_train_labels <- splits_tt$train[,11]
+data_test_labels <- splits_tt$test[,11]
+
+acs_zs <- invisible(lapply(1:80, accuracy_for_k))
+plot(1:length(acs_zs), acs_zs, type='o', xlab='Valores de K', ylab='Porcentaje de predicciones correctas', main='Aciertos sobre K con KNN (z-score)')
+highest_k_zs <- which.max(acs_zs)
+highest_acc_zs <- acs_zs[highest_k_zs]
+```
+
+Se puede ver en este caso una mejora en el porcentaje de aciertos con respecto a la normalización min-max. Con K = 31 se logra un 40% de aciertos.
+
+Como discusión final se puede hacer hipótesis del por qué un porcentaje de aciertos tan bajo.
+En primer lugar, al estar tratando con varias clases (5) ls posibilidades de acierto deben estar fundadas en un buen modelo de predicción, y no, tal vez, en el azar. En este sentido se podría comparar el desempeño del algoritmo de clasificación aquí presentado con una simple elección al azar de clases.
+Se debe mencionar además lo naturalmente compleja que es la tarea planteada: en efecto, la predicción del consumo de alcohol de una persona nunca podrá ser predecible con excelente efectividad por ningun experto en el tema. Eso sumado a la parcialidad en las preguntas, la subjetividad inherente a las respuestas de las encuestas, y la cantidad inmensa de factores no considerados pero que pueden ser significativos en el tema tratado, resultan en un modelo con muchos puntos a mejorar.
